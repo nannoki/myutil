@@ -6,6 +6,8 @@ tagger = MeCab.Tagger('-Ochasen -d /usr/lib/mecab/dic/mecab-ipadic-neologd')
 # tagger = MeCab.Tagger('-Owakati -d /usr/lib/mecab/dic/mecab-ipadic-neologd')
 # tagger = MeCab.Tagger('mecabrc')
 
+# おまじない。既知のバグ回避らしい。
+tagger.parse('') 
 
 # 使用する品詞。全部使うときは target = None
 # '名詞', '動詞', '形容詞'
@@ -45,11 +47,32 @@ def select_token(sentence):
     品詞選択し、分かち書き
     """
     result = []
+    node = tagger.parseToNode(sentence)
+    while node:
+        feats = node.feature.split(',')
+        # todo targetsに「助動詞」があると「動詞」もヒットするけど、そういう指定は
+        # 通常しないのでとりあえず放置
+        if feats[0] in targets:
+            # 表層（入力文字列そのまま）
+            if word_type == 0:
+                result.append(node.surface)
+            # 読み
+            elif word_type == 1:
+                result.append(feats[-1])
+            # 原形
+            elif word_type == 2:
+                result.append(feats[-3])
+            else:
+                print('word_typeが想定外')
+                exit(True)
+
+        node = node.next
+
+        
     for word in sentence:
         if (targets is None) or (word[3].split('-')[0] in targets):
-            # ここで小文字化。形態素解析前にやると、大文字混じりで出力されてしまう。
-            # それで統一されるならいいけど、一応。
-            # result.append(word[word_type].lower())
+            
+
             result.append(word[word_type])
     return ' '.join(result)
 
