@@ -16,6 +16,10 @@
         -> /home/(ユーザー名)/.cache/matplotlib/*.cache  # 環境に依存します
     2.フォントキャッシュを削除
         rm /home/(ユーザー名)tk/.cache/matplotlib/*.cache
+注意3:
+    指定すべきフォント名が分からない場合は、こちらを参考に。
+    for font in fonts:
+        print(str(font), '\t', fm.FontProperties(fname=font).get_name())
 """
 
 from matplotlib import rcParams
