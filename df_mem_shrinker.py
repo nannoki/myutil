@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 
@@ -31,34 +30,46 @@ def show_dfsize(df, unit=2):
     return mem
 
 
-def cast_smaller_dtype(df):
+def cast_smaller_dtype(df0, *, inplace=True):
     """
     データフレームの各カラムの型を最適化して、省メモリ化する。
     整数はデータの値は変わらないが、小数は倍精度(float64)から単精度(float32)に変わる。
 
     Parameters
     ----------
-    df: pd.DataFrame
+    df0: pd.DataFrame
         メモリを縮小させたいデータフレーム
+    inplace: bool
+        True: 引数のデータフレームを直接更新する。戻り値なし。
+        False: 引数のデータフレームの更新はせず、コピーした更新済みデータフレームを返す。【注意】コピーした分のメモリが増える。
 
     Returns
     -------
-    なし。渡されたデータフレーム自体を更新する。
-
+        inplace=Trueの時: なし。渡されたデータフレーム自体を更新する。
+        inplace=Falseの時: 更新済みデータフレームを返す。
     """
 
-    def _show_info(df1, msg):
+    def _show_info(df, msg):
         """
         情報表示用のヘルパー関数
         """
         print('-' * 30, msg, '-' * 30)
-        show_dfsize(df1)
+        show_dfsize(df)
         print()
-        print(df1.info())
-        print(df1.memory_usage())
-    
-    _show_info(df, 'Before')
-    
+        print(df.info())
+        print(df.memory_usage())
+
+    _show_info(df0, 'Before')
+
+    if inplace:
+        # 参照代入。引数のデータフレームを直接更新する。
+        df = df0
+    else:
+        # コピー。メモリが増える。
+        print('【注意】 "inplace=False"が設定されています。dfをコピーするため、メモリが増えます。')
+        df = df0.copy()
+
+
     print('-' * 30, 'Cast DF', '-' * 30)
     # int
     int_cols = df.select_dtypes(include=['int']).columns.tolist()
@@ -73,13 +84,15 @@ def cast_smaller_dtype(df):
             df[col] = df[col].astype(np.int32)
         else:
             df[col] = df[col].astype(np.int64)
-    
+
     # float
     float_cols = df.select_dtypes(include=['float']).columns.tolist()
     for col in float_cols:
         df[col] = df[col].astype(np.float32)
-    
+
     _show_info(df, 'After')
-    
+
     print('-' * 65)
-    
+
+    if not inplace:
+        return df
