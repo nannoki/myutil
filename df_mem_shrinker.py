@@ -66,7 +66,7 @@ def cast_smaller_dtype(df0, *, inplace=True):
         df = df0
     else:
         # コピー。メモリが増える。
-        print('【注意】 "inplace=False"が設定されています。dfをコピーするため、メモリが増えます。')
+        print('【注意】 "inplace=False"が設定されています。処理過程でdfのコピーを作成する為、その分メモリを消費します。')
         df = df0.copy()
 
 
