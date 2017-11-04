@@ -29,8 +29,8 @@ def show_object_size(threshold, unit=2):
     disp_unit = {1: 'KB', 2: 'MB', 3: 'GB'}
     threshold = threshold * 1024 ** unit
     # 処理中に変数が変動しないように固定
-    locals_copy = globals().copy()
-    for object_name in locals_copy.keys():
+    globals_copy = globals().copy()
+    for object_name in globals_copy.keys():
         size = sys.getsizeof(eval(object_name))
         if size > threshold:
             print('{:<15}{:.3f} {}'.format(object_name, size / 1024 ** unit, disp_unit[unit]))
