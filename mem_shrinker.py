@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-def show_variables_size(threshold, unit=2):
+def show_object_size(threshold, unit=2):
     """
     生きている全部の変数のサイズを表示する
 
@@ -30,10 +30,10 @@ def show_variables_size(threshold, unit=2):
     threshold = threshold * 1024 ** unit
     # 処理中に変数が変動しないように固定
     locals_copy = globals().copy()
-    for variable_name in locals_copy.keys():
-        size = sys.getsizeof(eval(variable_name))
+    for object_name in locals_copy.keys():
+        size = sys.getsizeof(eval(object_name))
         if size > threshold:
-            print('{:<15}{:.3f} {}'.format(variable_name, size / 1024 ** unit, disp_unit[unit]))
+            print('{:<15}{:.3f} {}'.format(object_name, size / 1024 ** unit, disp_unit[unit]))
 
 
 def get_df_size(df, unit=2):
