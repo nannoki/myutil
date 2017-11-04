@@ -1,8 +1,42 @@
+import sys
+
 import numpy as np
 import pandas as pd
 
 
-def show_dfsize(df, unit=2):
+def show_variables_size(threshold, unit=2):
+    """
+    生きている全部の変数のサイズを表示する
+
+    Parameters
+    ----------
+    threshold : int, float
+        表示するサイズの下限しきい値。
+        unitに応じた値にすること。
+    unit : int
+        表示するサイズの単位
+        1: KB
+        2: MB
+        3: GB
+    ex.
+        100MB超の変数をGB単位で表示したい場合
+        threshold=0.1, unit=3
+
+    Returns
+    -------
+        なし
+    """
+    disp_unit = {1: 'KB', 2: 'MB', 3: 'GB'}
+    threshold = threshold * 1024 ** unit
+    # 処理中に変数が変動しないように固定
+    locals_copy = globals().copy()
+    for variable_name in locals_copy.keys():
+        size = sys.getsizeof(eval(variable_name))
+        if size > threshold:
+            print('{:<15}{:.3f} {}'.format(variable_name, size / 1024 ** unit, disp_unit[unit]))
+
+
+def get_df_size(df, unit=2):
     """
     データフレームのサイズを返す
 
@@ -16,8 +50,7 @@ def show_dfsize(df, unit=2):
 
     Returns
     -------
-    float
-        unitに応じたデータフレームのサイズ
+    (float) unitに応じたデータフレームのサイズ
     """
 
     unit_dict = {1: 'KB',
@@ -30,7 +63,7 @@ def show_dfsize(df, unit=2):
     return mem
 
 
-def cast_smaller_dtype(df0, *, inplace=True):
+def df_cast_smaller_dtype(df0, *, inplace=True):
     """
     データフレームの各カラムの型を最適化して、省メモリ化する。
     整数はデータの値は変わらないが、小数は倍精度(float64)から単精度(float32)に変わる。
@@ -54,7 +87,7 @@ def cast_smaller_dtype(df0, *, inplace=True):
         情報表示用のヘルパー関数
         """
         print('-' * 30, msg, '-' * 30)
-        show_dfsize(df)
+        get_df_size(df)
         print()
         print(df.info())
         print(df.memory_usage())
