@@ -172,8 +172,9 @@ def df_cast_smaller_dtype(df0, *, inplace=True):
 
 
 if __name__ == '__main__':
-    df = pd.DataFrame(np.random.randn(10 * 5, 10 * 3))
+    df = pd.DataFrame(np.random.randn(10 ** 4, 10))
     df.index = ['aa' * 10 * i for i in range(len(df))]
     print('compute_object_size(df):', compute_object_size(df))
     print('get_df_size(df):', get_df_size(df))
     print('df_cast_smaller_dtype(df, inplace=True):', df_cast_smaller_dtype(df, inplace=True))
+    print('show_objects_size(10)', show_objects_size(10))
