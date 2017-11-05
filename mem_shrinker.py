@@ -47,7 +47,9 @@ def compute_object_size(o, unit=2, handlers={}):
 
 def show_objects_size(threshold, unit=2):
     """
-    生きている全部の変数のサイズを表示する
+    生きている全部の変数のサイズを表示する。
+    globals()を対象にしている為この関数をモジュール化してimportしても機能しない。
+    開発中の確認用に、同一モジュール内で実行すること。
 
     Parameters
     ----------
