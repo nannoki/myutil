@@ -1,10 +1,51 @@
 import sys
 
+from itertools import chain
+from collections import deque
+
 import numpy as np
 import pandas as pd
 
 
-def show_object_size(threshold, unit=2):
+def compute_object_size(o, unit=2, handlers={}):
+    """
+    listなどのコンテナ型オブジェクトは、sys.getsizeof()では実際に格納している
+    オブジェクトのサイズを取得できない。
+    Python公式ドキュメントからリンクされていた方法を流用する。
+    [Python公式]
+    https://docs.python.jp/3/library/sys.html#sys.getsizeof
+    [リンク先:  recursive sizeof recipe]
+    https://code.activestate.com/recipes/577504/
+    """
+    dict_handler = lambda d: chain.from_iterable(d.items())
+    all_handlers = {tuple: iter,
+                    list: iter,
+                    deque: iter,
+                    dict: dict_handler,
+                    set: iter,
+                    frozenset: iter,
+                   }
+    all_handlers.update(handlers)     # user handlers take precedence
+    seen = set()                      # track which object id's have already been seen
+    default_size = sys.getsizeof(0)       # estimate sizeof object without __sizeof__
+
+    def sizeof(o):
+        if id(o) in seen:       # do not double count the same object
+            return 0
+        seen.add(id(o))
+        s = sys.getsizeof(o, default_size)
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o) / 1024 ** unit
+
+
+
+def show_objects_size(threshold, unit=2):
     """
     生きている全部の変数のサイズを表示する
 
@@ -26,14 +67,13 @@ def show_object_size(threshold, unit=2):
     -------
         なし
     """
-    disp_unit = {1: 'KB', 2: 'MB', 3: 'GB'}
-    threshold = threshold * 1024 ** unit
+    disp_unit = {0: 'bites', 1: 'KB', 2: 'MB', 3: 'GB'}
     # 処理中に変数が変動しないように固定
     globals_copy = globals().copy()
     for object_name in globals_copy.keys():
-        size = sys.getsizeof(eval(object_name))
+        size = compute_object_size(eval(object_name))
         if size > threshold:
-            print('{:<15}{:.3f} {}'.format(object_name, size / 1024 ** unit, disp_unit[unit]))
+            print('{:<15}{:.3f} {}'.format(object_name, size, disp_unit[unit]))
 
 
 def get_df_size(df, unit=2):
@@ -58,7 +98,7 @@ def get_df_size(df, unit=2):
                  3: 'GB'}
     assert unit in unit_dict.keys(), 'unitは1(KB), 2(MB), 3(GB)のいずれか'
     mem = df.memory_usage(index=True).sum() / 1024 ** unit
-    print('{:.4f} {}'.format(mem, unit_dict[unit]))
+    # print('{:.4f} {}'.format(mem, unit_dict[unit]))
 
     return mem
 
@@ -129,3 +169,11 @@ def df_cast_smaller_dtype(df0, *, inplace=True):
 
     if not inplace:
         return df
+
+
+if __name__ == '__main__':
+    df = pd.DataFrame(np.random.randn(10 * 5, 10 * 3))
+    df.index = ['aa' * 10 * i for i in range(len(df))]
+    print('compute_object_size(df):', compute_object_size(df))
+    print('get_df_size(df):', get_df_size(df))
+    print('df_cast_smaller_dtype(df, inplace=True):', df_cast_smaller_dtype(df, inplace=True))
